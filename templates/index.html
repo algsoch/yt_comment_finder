@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Comment Finder &mdash; by algsoch</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Search YouTube comments by username or keyword with live progress. Built by Vicky Kumar (@algsoch)." />
+  <meta name="keywords" content="algsoch, Vicky Kumar, YouTube comment search, comment finder, YouTube tool" />
+  <meta name="author" content="Vicky Kumar (algsoch)" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="YouTube Comment Finder &mdash; algsoch" />
+  <meta property="og:description" content="Search YouTube comments by username or keyword with live scanning progress. Built by Vicky Kumar (@algsoch)." />
+  <meta property="og:site_name" content="algsoch" />
+
+  <!-- Favicon (inline SVG — orange play-search icon matching the app theme) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23ff6b00' stroke-width='2'/%3E%3Cpolygon points='13,11 23,16 13,21' fill='%23ff6b00'/%3E%3C/svg%3E" />
+
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">&#9654;</div>
+      <h1>YouTube <span>Comment</span> Finder</h1>
+    </div>
+    <p>Search comments by username, keyword, or both &mdash; with live progress.</p>
+  </header>
+
+  <!-- Search Form -->
+  <div class="card">
+    <div class="card-title">&#128269; Search Parameters</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label for="url">YouTube URL</label>
+        <input type="text" id="url"
+               placeholder="https://www.youtube.com/shorts/VMsevyvXOAc"
+               value="{{ search_url if search_url else default_url }}"
+               autocomplete="off" />
+        <span class="hint">Supports watch?v=, /shorts/, youtu.be/, /embed/ formats</span>
+      </div>
+      <div class="form-group">
+        <label for="username">Filter by Username</label>
+        <input type="text" id="username"
+               placeholder="e.g. John Doe  (blank = all)"
+               value="{{ search_username }}" autocomplete="off" />
+        <span class="hint">Case-insensitive partial match on display name</span>
+      </div>
+      <div class="form-group">
+        <label for="keyword">Filter by Comment Text</label>
+        <input type="text" id="keyword"
+               placeholder="e.g. Watch Party  (blank = all)"
+               value="{{ search_keyword }}" autocomplete="off" />
+        <span class="hint">Case-insensitive partial match inside comment body</span>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="search-btn" onclick="startSearch()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Find Comments
+      </button>
+      <button class="btn btn-browse" id="browse-btn" onclick="startBrowse()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        Browse All
+      </button>
+      <button class="btn btn-stop" id="stop-btn" onclick="stopSearch()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        Stop
+      </button>
+      <button class="btn btn-secondary" onclick="resetAll()">Clear</button>
+      <span id="live-badge" style="display:none;font-size:.85rem;color:var(--accent);font-weight:600;"></span>
+    </div>
+  </div>
+
+  <!-- Progress Console -->
+  <div id="progress-box">
+    <div class="lp-header">
+      <div class="lp-title-row">
+        <span class="pulse-dot" id="pulse-dot"></span>
+        <span class="lp-label">Live Scanning</span>
+      </div>
+      <div id="lp-vidtitle" class="lp-vidtitle"></div>
+    </div>
+    <div class="lp-bar-section">
+      <div class="lp-counts-row">
+        <span id="lp-counts" class="lp-counts"></span>
+        <span id="lp-pct-label" class="lp-pct-label">&mdash;</span>
+      </div>
+      <div class="lp-bar-wrap" id="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+    <div class="sc-grid">
+      <div class="sc-cell"><div class="sc-val" id="sc-pages">&mdash;</div><div class="sc-lbl">Pages</div></div>
+      <div class="sc-cell"><div class="sc-val" id="sc-threads">&mdash;</div><div class="sc-lbl">Threads</div></div>
+      <div class="sc-cell"><div class="sc-val" id="sc-replies">&mdash;</div><div class="sc-lbl">Replies</div></div>
+      <div class="sc-cell sc-accent"><div class="sc-val" id="sc-matched">0</div><div class="sc-lbl">Matched</div></div>
+      <div class="sc-cell"><div class="sc-val" id="sc-speed">&mdash;</div><div class="sc-lbl">Per&nbsp;sec</div></div>
+    </div>
+    <div id="console-log"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-error" id="error-banner">
+    <span class="alert-icon">&#9888;</span>
+    <div><strong>Error:</strong> <span id="error-text"></span></div>
+  </div>
+
+  <!-- Video Bar -->
+  <div id="video-bar">
+    <img class="video-thumb" id="video-thumb" src="" alt="thumbnail" onerror="this.style.display='none'" />
+    <div class="video-meta">
+      <div class="video-title-text" id="video-title-el"></div>
+      <div id="stats-row" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;"></div>
+    </div>
+  </div>
+
+  <!-- Browse Overlay -->
+  <div id="browse-overlay">
+    <div id="browse-modal">
+      <div id="browse-topbar">
+        <div id="browse-video-info">
+          <span id="browse-video-title"></span>
+        </div>
+        <div id="browse-controls">
+          <span id="browse-status" class="browse-status-pill"></span>
+          <button class="browse-nav" id="browse-prev" onclick="browseMove(-1)" title="Previous (&#8592;)">&#8592;</button>
+          <span id="browse-counter"></span>
+          <button class="browse-nav" id="browse-next" onclick="browseMove(1)" title="Next (&#8594;)">&#8594;</button>
+          <button class="browse-close" onclick="closeBrowse()" title="Close (Esc)">&#10005;</button>
+        </div>
+      </div>
+      <div id="browse-progress-wrap"><div id="browse-progress-bar"></div></div>
+      <div id="browse-card-area">
+        <div id="browse-card"></div>
+        <div id="browse-hints">
+          <span>&#8592; &#8594; arrow keys to navigate</span>
+          <span>&#183;</span>
+          <span>Esc to close</span>
+          <span>&#183;</span>
+          <span id="browse-loading-note">loading comments…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comment List -->
+  <div id="comment-list"></div>
+
+  <!-- Empty State -->
+  <div id="empty-state">
+    <div class="empty-icon">&#128269;</div>
+    <p id="empty-text">No matching comments found.</p>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="sf-inner">
+    <div class="sf-left">
+      <span class="sf-name">Vicky Kumar</span>
+      <span class="sf-sep">&middot;</span>
+      <span class="sf-handle">@algsoch</span>
+    </div>
+    <div class="sf-center">
+      <span class="sf-copy">&copy; 2026 &mdash; YouTube Comment Finder</span>
+    </div>
+    <div class="sf-right">
+      <a class="sf-link" href="https://github.com/algsoch" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.482 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.021C22 6.484 17.522 2 12 2z"/></svg>
+        GitHub
+      </a>
+      <a class="sf-link" href="https://www.linkedin.com/in/algsoch" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        LinkedIn
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var evtSource = null;
+  var totalFetched = 0;
+  var matchCount = 0;
+  var videoCommentCount = 0;
+  var userStopped = false;
+  var scanPages = 0;
+  var scanThreadsCum = 0;
+  var scanRepliesCum = 0;
+  var scanStart = null;
+
+  /* ── Browse state ────────────────────────────────────────────── */
+  var browseBuffer = [];   // all comments collected during browse stream
+  var browseIdx    = 0;
+  var browseEvt    = null;
+  var browseDone   = false;
+  var browseTotal  = 0;
+
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function highlight(html, kw){
+    if(!kw) return html;
+    var e = kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return html.replace(new RegExp('('+e+')','gi'),'<mark>$1</mark>');
+  }
+  function fmtDate(iso){
+    if(!iso) return '';
+    try{ return new Date(iso).toUTCString().replace(' GMT','')+' UTC'; }catch(x){ return iso; }
+  }
+  function addLog(msg, cls){
+    var el=document.getElementById('console-log');
+    /* page result line: "Page N: X threads + Y replies — Z/Total scanned (P%)" */
+    var pm=msg.match(/^Page\s+(\d+):\s+(\d+)\s+threads?\s*\+\s*(\d+)\s+replies?[^(]*\((\d+)%\)/i);
+    if(pm){
+      var threads=parseInt(pm[2]),replies=parseInt(pm[3]),pct=parseInt(pm[4]);
+      scanPages=parseInt(pm[1]); scanThreadsCum+=threads; scanRepliesCum+=replies;
+      var row=document.createElement('div'); row.className='page-row';
+      row.innerHTML='<span class="pr-num">P'+pm[1]+'</span>'
+        +'<div class="pr-body">'
+          +'<div class="pr-info"><span class="pr-th">\u2191'+threads+'t</span>'+(replies?'<span class="pr-re">+'+replies+'r</span>':'')+' </div>'
+          +'<div class="pr-bar-wrap"><div class="pr-bar" style="width:'+pct+'%"></div></div>'
+        +'</div>'
+        +'<span class="pr-pct">'+pct+'%</span>';
+      el.appendChild(row);
+      updateScanGrid();
+    } else if(/^Fetching page\s+\d+/i.test(msg)){
+      var num=(msg.match(/\d+/)||['?'])[0];
+      var row=document.createElement('div'); row.className='fetch-row';
+      row.innerHTML='<span class="fr-spin"></span><span>Fetching page '+num+'\u2026</span>';
+      el.appendChild(row);
+    } else {
+      var row=document.createElement('div');
+      row.className='log-line'+(cls?' '+cls:'');
+      row.textContent=msg;
+      el.appendChild(row);
+    }
+    el.scrollTop=el.scrollHeight;
+  }
+  function setPulse(s){
+    document.getElementById('pulse-dot').className='pulse-dot'+(s!=='active'?' '+s:'');
+  }
+  function updateBadge(){
+    var b=document.getElementById('live-badge');
+    if(matchCount>0){ b.style.display='inline'; b.textContent=matchCount+' match'+(matchCount!==1?'es':'')+' found'; }
+    else { b.style.display='none'; }
+  }
+  function updateScanGrid(){
+    document.getElementById('sc-pages').textContent=scanPages||'\u2014';
+    document.getElementById('sc-threads').textContent=scanThreadsCum||'\u2014';
+    document.getElementById('sc-replies').textContent=scanRepliesCum;
+    document.getElementById('sc-matched').textContent=matchCount;
+    if(scanStart&&scanPages>0){
+      var elapsed=(Date.now()-scanStart)/1000;
+      var total=scanThreadsCum+scanRepliesCum;
+      var spd=elapsed>0.5?Math.round(total/elapsed):0;
+      document.getElementById('sc-speed').textContent=spd>0?spd+'/s':'\u2014';
+    }
+  }
+  function updateProgressMeta(scanned, total, matched){
+    var countsEl=document.getElementById('lp-counts');
+    var pctLabel=document.getElementById('lp-pct-label');
+    var bar=document.getElementById('progress-bar');
+    if(total>0){
+      var pct=Math.round(100*scanned/total);
+      if(countsEl) countsEl.textContent=scanned.toLocaleString()+' / '+total.toLocaleString();
+      if(pctLabel) pctLabel.textContent=pct+'%';
+      if(!bar.classList.contains('done')){
+        bar.style.animation='none'; bar.style.width=pct+'%'; bar.style.marginLeft='0';
+      }
+    } else {
+      if(countsEl) countsEl.textContent=scanned.toLocaleString()+' scanned';
+    }
+    document.getElementById('sc-matched').textContent=matched;
+  }
+  function stopSearch(){
+    if(evtSource){ evtSource.close(); evtSource=null; }
+    document.getElementById('stop-btn').style.display='none';
+    setPulse('done'); resetBtn();
+  }
+
+  function startSearch(){
+    var url=document.getElementById('url').value.trim();
+    var username=document.getElementById('username').value.trim();
+    var keyword=document.getElementById('keyword').value.trim();
+    if(!url){ alert('Please enter a YouTube URL.'); return; }
+    resetResults();
+    var btn=document.getElementById('search-btn');
+    btn.disabled=true;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin360 .8s linear infinite"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.7"/></svg> Searching\u2026';
+    document.getElementById('progress-box').classList.add('active');
+    document.getElementById('progress-bar').className='progress-bar';
+    setPulse('active');
+    var p=new URLSearchParams({url:url,username:username,keyword:keyword});
+    if(evtSource) evtSource.close();
+    evtSource=new EventSource('/stream-search?'+p);
+
+    evtSource.addEventListener('stats',function(e){
+      var d=JSON.parse(e.data);
+      if(d.title){ var lv=document.getElementById('lp-vidtitle'); if(lv) lv.textContent=d.title; }
+      scanStart=Date.now();
+      document.getElementById('stop-btn').style.display='inline-flex';
+    });
+    evtSource.addEventListener('progress',function(e){
+      var d=JSON.parse(e.data);
+      updateProgressMeta(d.scanned,d.total,d.matched);
+      updateScanGrid();
+    });
+    evtSource.addEventListener('log',function(e){
+      var d=JSON.parse(e.data);
+      addLog(d.msg);
+    });
+    evtSource.addEventListener('result',function(e){
+      var c=JSON.parse(e.data);
+      matchCount++; updateBadge();
+      appendComment(c,keyword);
+      document.getElementById('empty-state').classList.remove('active');
+    });
+    evtSource.addEventListener('done',function(e){
+      var d=JSON.parse(e.data);
+      evtSource.close(); evtSource=null;
+      addLog('Done. Scanned '+d.total+' comments, found '+d.matched+' match(es).','log-done');
+      document.getElementById('progress-bar').className='progress-bar done';
+      setPulse('done');
+      var lc=document.getElementById('lp-counts');if(lc)lc.textContent=d.total.toLocaleString()+' scanned \u00b7 '+d.matched+' matched';
+      var pl=document.getElementById('lp-pct-label');if(pl)pl.textContent='100%';
+      updateScanGrid();
+      if(d.video_title){
+        document.getElementById('video-title-el').textContent=d.video_title;
+        document.getElementById('video-thumb').src=d.video_thumbnail;
+        document.getElementById('video-bar').classList.add('active');
+        var sr=document.getElementById('stats-row');
+        sr.innerHTML='<span class="stat-pill">'+d.total+' comment'+(d.total!==1?'s':'')+'</span>'
+          +'<span class="stat-pill accent">'+d.matched+' match'+(d.matched!==1?'es':'')+'</span>'
+          +(username?'<span class="stat-pill">user: \u201c'+esc(username)+'\u201d</span>':'')
+          +(keyword?'<span class="stat-pill">keyword: \u201c'+esc(keyword)+'\u201d</span>':'');
+      }
+      if(d.matched===0){
+        var msg='No matching comments found.';
+        if(username&&keyword) msg='No comments from "'+username+'" containing "'+keyword+'" found.';
+        else if(username) msg='No comments from "'+username+'" found.';
+        else if(keyword)  msg='No comments containing "'+keyword+'" found.';
+        document.getElementById('empty-text').textContent=msg;
+        document.getElementById('empty-state').classList.add('active');
+      }
+      resetBtn();
+    });
+    evtSource.addEventListener('error',function(e){
+      var msg='An unexpected error occurred.';
+      try{ msg=JSON.parse(e.data).message; }catch(x){}
+      addLog('Error: '+msg,'log-error');
+      setPulse('error');
+      var pb=document.getElementById('progress-bar');
+      pb.style.background='var(--danger)'; pb.style.animation='none'; pb.style.width='100%';
+      var b=document.getElementById('error-banner');
+      document.getElementById('error-text').textContent=msg;
+      b.style.display='flex'; b.classList.add('active');
+      if(evtSource){ evtSource.close(); evtSource=null; }
+      document.getElementById('stop-btn').style.display='none';
+      resetBtn();
+    });
+    evtSource.onerror=function(){
+      if(evtSource&&evtSource.readyState===EventSource.CLOSED) return;
+      addLog('Connection lost.','log-error');
+      if(evtSource){ evtSource.close(); evtSource=null; }
+      document.getElementById('stop-btn').style.display='none';
+      setPulse('error'); resetBtn();
+    };
+  }
+
+  /* ── Browse ──────────────────────────────────────────────────── */
+  function startBrowse(){
+    var url=document.getElementById('url').value.trim();
+    if(!url){ alert('Please enter a YouTube URL.'); return; }
+    browseBuffer=[]; browseIdx=0; browseDone=false; browseTotal=0;
+    browseCache={};
+    document.getElementById('browse-overlay').classList.add('active');
+    document.getElementById('browse-loading-note').style.display='inline';
+    document.getElementById('browse-video-title').textContent='';
+    document.getElementById('browse-counter').textContent='loading…';
+    document.getElementById('browse-status').textContent='Fetching…';
+    document.getElementById('browse-status').className='browse-status-pill fetching';
+    document.getElementById('browse-progress-bar').style.width='0%';
+    renderBrowseCard();
+    // stream ALL comments (no username/keyword filter)
+    var p=new URLSearchParams({url:url,username:'',keyword:''});
+    if(browseEvt) browseEvt.close();
+    browseEvt=new EventSource('/stream-search?'+p);
+    browseEvt.addEventListener('stats',function(e){
+      var d=JSON.parse(e.data);
+      browseTotal=d.comment_count||0;
+      document.getElementById('browse-video-title').textContent=d.video_title||'';
+      bruteBrowseCounter();
+    });
+    browseEvt.addEventListener('progress',function(e){
+      var d=JSON.parse(e.data);
+      if(browseTotal>0)
+        document.getElementById('browse-progress-bar').style.width=Math.round(100*d.scanned/browseTotal)+'%';
+      document.getElementById('browse-status').textContent=d.scanned.toLocaleString()+' fetched';
+    });
+    browseEvt.addEventListener('result',function(e){
+      var c=JSON.parse(e.data);
+      var wasAtEnd=(browseIdx===browseBuffer.length-1); // were we at the latest card?
+      browseBuffer.push(c);
+      if(browseBuffer.length===1||wasAtEnd){
+        /* first card, or viewer is at the last one — auto-advance to the new arrival */
+        browseIdx=browseBuffer.length-1;
+        scheduleBrowseRender();
+      } else {
+        bruteBrowseCounter(); /* just enable the next-btn */
+      }
+    });
+    browseEvt.addEventListener('done',function(e){
+      browseDone=true;
+      browseEvt.close(); browseEvt=null;
+      document.getElementById('browse-loading-note').style.display='none';
+      document.getElementById('browse-status').textContent=browseBuffer.length.toLocaleString()+' total';
+      document.getElementById('browse-status').className='browse-status-pill done';
+      document.getElementById('browse-progress-bar').style.width='100%';
+      bruteBrowseCounter();
+    });
+    browseEvt.addEventListener('error',function(e){
+      document.getElementById('browse-status').textContent='Error';
+      document.getElementById('browse-status').className='browse-status-pill error';
+    });
+  }
+
+  /* Cache of pre-built HTML strings keyed by buffer index */
+  var browseCache = {};
+  var browseRafPending = false;
+
+  function buildCardHTML(c){
+    var av=c.author_profile_image
+      ?'<img class="avatar bc-av" src="'+esc(c.author_profile_image)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"/><div class="avatar-fallback" style="display:none">'+esc((c.author||'?')[0].toUpperCase())+'</div>'
+      :'<div class="avatar-fallback">'+esc((c.author||'?')[0].toUpperCase())+'</div>';
+    var replyBadge=c.is_reply?'<span class="reply-badge">&#8627; reply</span>':'';
+    return replyBadge
+      +'<div class="bc-head">'+av
+        +'<div><a class="comment-author-name" href="'+esc(c.author_channel_url||'#')+'" target="_blank" rel="noopener">'+esc(c.author)+'</a>'
+        +'<div class="comment-date">'+esc(c.published_at_fmt||fmtDate(c.published_at))+'</div></div></div>'
+      +'<div class="bc-text">'+esc(c.text_plain||c.text||'')+'</div>'
+      +'<div class="bc-footer">'
+        +'<span class="meta-tag"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>'+c.likes+' like'+(c.likes!==1?'s':'')+'</span>'
+        +(c.reply_count?'<span class="meta-tag"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+c.reply_count+' repl'+(c.reply_count!==1?'ies':'y')+'</span>':'')
+      +'</div>';
+  }
+
+  function browseMove(dir){
+    if(!browseBuffer.length) return;
+    var next=browseIdx+dir;
+    if(next<0||next>browseBuffer.length-1) return;
+    browseIdx=next;
+    scheduleBrowseRender();
+  }
+
+  function scheduleBrowseRender(){
+    if(browseRafPending) return;
+    browseRafPending=true;
+    requestAnimationFrame(function(){
+      browseRafPending=false;
+      renderBrowseCard();
+      bruteBrowseCounter();
+    });
+  }
+
+  function bruteBrowseCounter(){
+    var total=browseDone?browseBuffer.length:(browseTotal||'?');
+    document.getElementById('browse-counter').textContent=
+      browseBuffer.length?(browseIdx+1)+' / '+total:'0 / '+total;
+    document.getElementById('browse-prev').disabled=(browseIdx<=0);
+    document.getElementById('browse-next').disabled=(browseIdx>=browseBuffer.length-1);
+  }
+
+  function renderBrowseCard(){
+    var card=document.getElementById('browse-card');
+    if(!browseBuffer.length){
+      card.innerHTML='<div class="bc-empty">Waiting for comments…</div>';
+      return;
+    }
+    /* use cached HTML — build once, reuse on revisit */
+    if(!browseCache[browseIdx])
+      browseCache[browseIdx]=buildCardHTML(browseBuffer[browseIdx]);
+    card.innerHTML=browseCache[browseIdx];
+    card.scrollTop=0;
+  }
+
+  /* Throttled keydown — no repeat storm */
+  var browseKeyLast=0;
+  document.addEventListener('keydown',function(e){
+    var overlay=document.getElementById('browse-overlay');
+    if(!overlay.classList.contains('active')) return;
+    if(e.key==='Escape'){ closeBrowse(); return; }
+    var now=Date.now();
+    if(now-browseKeyLast<80) return; /* 80 ms = ~12 nav/s max */
+    browseKeyLast=now;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown') browseMove(1);
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp') browseMove(-1);
+  });
+
+  function updateBrowseCounter(){ bruteBrowseCounter(); }
+
+  function closeBrowse(){
+    document.getElementById('browse-overlay').classList.remove('active');
+    if(browseEvt){ browseEvt.close(); browseEvt=null; }
+  }
+
+  function appendComment(c, keyword){
+    var list=document.getElementById('comment-list');
+    var div=document.createElement('div');
+    div.className='comment-item'+(c.is_reply?' is-reply':'')+(keyword?' has-kw':'');
+    var av=c.author_profile_image
+      ?'<img class="avatar" src="'+esc(c.author_profile_image)+'" alt="'+esc(c.author)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"/><div class="avatar-fallback" style="display:none">'+esc((c.author||'?')[0].toUpperCase())+'</div>'
+      :'<div class="avatar-fallback">'+esc((c.author||'?')[0].toUpperCase())+'</div>';
+    var rawText=esc(c.text_plain||c.text||'');
+    var dispText=keyword?highlight(rawText,esc(keyword)):rawText;
+    var replyBadge=c.is_reply?'<div class="reply-badge">&#8627; reply</div>':'';
+    div.innerHTML=
+      replyBadge
+      +'<div class="comment-head">'+av
+        +'<div><a class="comment-author-name" href="'+esc(c.author_channel_url||'#')+'" target="_blank" rel="noopener">'+esc(c.author)+'</a>'
+        +'<div class="comment-date">'+esc(c.published_at_fmt||fmtDate(c.published_at))+'</div></div></div>'
+      +'<div class="comment-text">'+dispText+'</div>'
+      +'<div class="comment-footer">'
+        +'<span class="meta-tag"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>'+c.likes+' like'+(c.likes!==1?'s':'')+'</span>'
+        +(c.reply_count?'<span class="meta-tag"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+c.reply_count+' repl'+(c.reply_count!==1?'ies':'y')+'</span>':'')
+      +'</div>';
+    list.appendChild(div);
+  }
+
+  function resetBtn(){
+    var btn=document.getElementById('search-btn');
+    btn.disabled=false;
+    btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Find Comments';
+  }
+  function resetResults(){
+    document.getElementById('comment-list').innerHTML='';
+    document.getElementById('console-log').innerHTML='';
+    var lc=document.getElementById('lp-counts');if(lc)lc.textContent='';
+    var pl=document.getElementById('lp-pct-label');if(pl)pl.textContent='\u2014';
+    var lv=document.getElementById('lp-vidtitle');if(lv)lv.textContent='';
+    ['sc-pages','sc-threads','sc-replies','sc-speed'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='\u2014';});
+    var sm=document.getElementById('sc-matched');if(sm)sm.textContent='0';
+    document.getElementById('video-bar').classList.remove('active');
+    document.getElementById('stats-row').innerHTML='';
+    document.getElementById('empty-state').classList.remove('active');
+    document.getElementById('error-banner').classList.remove('active');
+    document.getElementById('error-banner').style.display='none';
+    document.getElementById('live-badge').style.display='none';
+    document.getElementById('progress-bar').style.cssText='';
+    totalFetched=0; matchCount=0; videoCommentCount=0;
+    scanPages=0; scanThreadsCum=0; scanRepliesCum=0; scanStart=null;
+  }
+  function resetAll(){
+    if(evtSource){ evtSource.close(); evtSource=null; }
+    resetResults();
+    document.getElementById('url').value='';
+    document.getElementById('username').value='';
+    document.getElementById('keyword').value='';
+    document.getElementById('progress-box').classList.remove('active');
+    document.getElementById('stop-btn').style.display='none';
+    resetBtn();
+  }
+  ['url','username','keyword'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown',function(e){ if(e.key==='Enter') startSearch(); });
+  });
+</script>
+</body>
+</html>
