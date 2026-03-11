@@ -943,9 +943,10 @@ mark:hover {
   .api-key-panel { margin-left: -1.35rem; margin-right: -1.35rem; }
   .api-key-panel.open { padding: .85rem 1.35rem .75rem; }
   .api-key-hint { margin-left: -1.35rem; margin-right: -1.35rem; margin-bottom: -1.35rem; padding: .55rem 1.35rem .75rem; }
-  .lp-vidtitle { max-width: 300px; }
-  #video-bar { gap: .75rem; }
-  .video-thumb { width: 90px; height: 52px; }
+  /* Footer — tablet: keep row but shrink center */
+  .site-footer { padding: 1.1rem 1.25rem; }
+  .sf-center { font-size: .72rem; }
+  .sf-name { font-size: .82rem; }
 }
 
 /* ── 560px ──────────────────────────────────────────────────────────────────── */
@@ -1010,10 +1011,24 @@ mark:hover {
   .bc-text { font-size: .91rem; }
   .browse-nav, .browse-close { width: 40px; height: 40px; }
 
-  /* Footer */
-  .sf-inner { flex-direction: column; align-items: center; text-align: center; gap: .65rem; }
-  .sf-center { display: none; }
-  .sf-right { gap: .4rem; }
+  /* Footer — two stacked rows: [name · handle  |  links] then copyright */
+  .site-footer { padding: 1rem 1.1rem; }
+  .sf-inner {
+    flex-wrap: wrap;
+    gap: 0;
+    row-gap: 0;
+  }
+  .sf-left  { order: 1; flex: 1 1 auto; padding-bottom: .6rem; }
+  .sf-right { order: 2; flex-shrink: 0; gap: .4rem; padding-bottom: .6rem; }
+  .sf-center {
+    order: 3;
+    flex: 0 0 100%;   /* force onto its own row */
+    text-align: center;
+    padding-top: .55rem;
+    border-top: 1px solid var(--border);
+    font-size: .72rem;
+    display: block;
+  }
 }
 
 /* ── 420px ──────────────────────────────────────────────────────────────────── */
@@ -1037,6 +1052,11 @@ mark:hover {
   .avatar-fallback { width: 30px; height: 30px; font-size: .8rem; }
 
   .sf-link { padding: .3rem .6rem; font-size: .74rem; }
+
+  /* Footer — full stack, all centered */
+  .sf-inner { justify-content: center; }
+  .sf-left  { flex: 0 0 100%; justify-content: center; padding-bottom: .5rem; }
+  .sf-right { flex: 0 0 100%; justify-content: center; padding-bottom: .5rem; }
 }
 
 /* ── 360px ──────────────────────────────────────────────────────────────────── */
@@ -1048,6 +1068,10 @@ mark:hover {
   /* All buttons stretch full-width and stack individually */
   .fa-primary, .fa-secondary { flex-direction: column; gap: .45rem; }
   .btn { justify-content: center; width: 100%; }
+
+  /* Footer — links wrap to two rows if needed */
+  .sf-right { flex-wrap: wrap; justify-content: center; gap: .4rem; }
+  .sf-link { flex: 1 1 45%; justify-content: center; }
 
   .sc-grid { grid-template-columns: repeat(3, 1fr); }
   .sc-val { font-size: .8rem; }
@@ -1176,13 +1200,13 @@ mark:hover {
 /* ── Site Footer ─────────────────────────────────────────────────────────────── */
 .site-footer {
   margin-top: 3rem;
-  padding: 1.25rem 1rem;
+  padding: 1.35rem 1.5rem;
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
 
 .sf-inner {
-  max-width: 760px;
+  max-width: 820px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -1195,11 +1219,12 @@ mark:hover {
   display: flex;
   align-items: center;
   gap: .45rem;
+  flex-shrink: 0;
 }
 
 .sf-name {
   font-weight: 700;
-  font-size: .85rem;
+  font-size: .875rem;
   color: var(--text);
   letter-spacing: .01em;
 }
@@ -1216,7 +1241,7 @@ mark:hover {
 }
 
 .sf-center {
-  font-size: .76rem;
+  font-size: .75rem;
   color: var(--text-dim);
   text-align: center;
   flex: 1;
@@ -1227,6 +1252,7 @@ mark:hover {
   display: flex;
   align-items: center;
   gap: .5rem;
+  flex-shrink: 0;
 }
 
 .sf-link {
@@ -1237,7 +1263,7 @@ mark:hover {
   font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
-  padding: .32rem .7rem;
+  padding: .35rem .75rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface2);
