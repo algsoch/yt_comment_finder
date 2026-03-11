@@ -1132,7 +1132,8 @@ mark:hover {
   margin-left: -1.75rem;
   margin-right: -1.75rem;
   margin-bottom: -1.75rem;
-  padding: .55rem 1.75rem .75rem;
+  margin-top: 1.35rem;
+  padding: .6rem 1.75rem .8rem;
   display: flex;
   align-items: center;
   gap: .35rem;
