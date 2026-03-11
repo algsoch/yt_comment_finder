@@ -251,7 +251,7 @@ def sse(event: str, data: Any) -> str:
 
 
 async def search_stream(
-    request: Request, url: str, username: str, keyword: str
+    request: Request, url: str, username: str, keyword: str, api_key: str = ""
 ) -> AsyncGenerator[str, None]:
     """
     Async generator that yields SSE events:
@@ -262,9 +262,10 @@ async def search_stream(
       error   – { message }
     """
     try:
-        api_key = YOUTUBE_API_KEY
+        # Use user-supplied key if provided, else fall back to server env key
+        api_key = api_key.strip() or YOUTUBE_API_KEY
         if not api_key:
-            yield sse("error", {"message": "YOUTUBE_API_KEY is not set in .env"})
+            yield sse("error", {"message": "No API key available. Enter your YouTube Data API key or contact the server admin."})
             return
 
         url = url.strip()
@@ -406,10 +407,11 @@ async def stream_search(
     url: str = "",
     username: str = "",
     keyword: str = "",
+    api_key: str = "",
 ):
     """SSE endpoint – streams search progress and results."""
     return StreamingResponse(
-        search_stream(request, url, username, keyword),
+        search_stream(request, url, username, keyword, api_key),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

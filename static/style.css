@@ -1028,6 +1028,31 @@ mark:hover {
   .bc-text { font-size: .86rem; }
 }
 
+/* ── API Key Reveal Toggle ─────────────────────────────────────────────────── */
+.input-reveal-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-reveal-wrap input {
+  flex: 1;
+  padding-right: 2.6rem;
+}
+.reveal-btn {
+  position: absolute;
+  right: .55rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: .3rem;
+  display: flex;
+  align-items: center;
+  opacity: .7;
+  transition: opacity .15s;
+}
+.reveal-btn:hover { opacity: 1; }
+
 /* ── Site Footer ─────────────────────────────────────────────────────────────── */
 .site-footer {
   margin-top: 3rem;
