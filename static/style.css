@@ -920,6 +920,9 @@ mark:hover {
   header { padding: 1.75rem 0 1.5rem; }
   header h1 { font-size: 1.55rem; }
   .card { padding: 1.35rem; }
+  .api-key-panel { margin-left: -1.35rem; margin-right: -1.35rem; }
+  .api-key-panel.open { padding: .85rem 1.35rem .75rem; }
+  .api-key-hint { margin-left: -1.35rem; margin-right: -1.35rem; margin-bottom: -1.35rem; padding: .55rem 1.35rem .75rem; }
   .lp-vidtitle { max-width: 300px; }
   #video-bar { gap: .75rem; }
   .video-thumb { width: 90px; height: 52px; }
@@ -935,6 +938,9 @@ mark:hover {
 
   /* Card + form */
   .card { padding: 1rem; border-radius: 10px; }
+  .api-key-panel { margin-left: -1rem; margin-right: -1rem; }
+  .api-key-panel.open { padding: .85rem 1rem .75rem; }
+  .api-key-hint { margin-left: -1rem; margin-right: -1rem; margin-bottom: -1rem; padding: .55rem 1rem .65rem; border-radius: 0 0 10px 10px; }
   .form-grid { grid-template-columns: 1fr; }
   /* font-size: 16px prevents iOS auto-zoom on focus */
   input[type="text"] { font-size: 16px; padding: .6rem .8rem; }
@@ -993,6 +999,9 @@ mark:hover {
   header h1 { font-size: 1.2rem; }
   .logo-row { gap: .5rem; }
   .card { padding: .85rem; }
+  .api-key-panel { margin-left: -.85rem; margin-right: -.85rem; }
+  .api-key-panel.open { padding: .75rem .85rem .65rem; }
+  .api-key-hint { margin-left: -.85rem; margin-right: -.85rem; margin-bottom: -.85rem; padding: .5rem .85rem .6rem; }
 
   .sc-grid { grid-template-columns: repeat(3, 1fr); }
   .lp-vidtitle { display: none; }
@@ -1029,6 +1038,93 @@ mark:hover {
 }
 
 /* ── API Key Reveal Toggle ─────────────────────────────────────────────────── */
+.settings-toggle {
+  order: 3;       /* sits after the ::after separator line */
+  margin-left: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: .25rem .35rem;
+  display: inline-flex;
+  align-items: center;
+  opacity: .55;
+  transition: opacity .15s, border-color .15s, color .15s;
+}
+.settings-toggle:hover,
+.settings-toggle.active {
+  opacity: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.settings-toggle.active svg {
+  animation: spin360 .35s ease-out;
+}
+
+/* Collapsible API key panel */
+.api-key-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height .3s ease, opacity .25s ease, padding .3s ease;
+  /* bleed out of card padding */
+  margin-left: -1.75rem;
+  margin-right: -1.75rem;
+  padding: 0 1.75rem;
+  border-top: 1px solid transparent;
+}
+.api-key-panel.open {
+  max-height: 90px;
+  opacity: 1;
+  padding: .85rem 1.75rem .75rem;
+  border-top-color: var(--border);
+}
+.akp-inner {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.akp-inner label {
+  white-space: nowrap;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.akp-inner .input-reveal-wrap {
+  flex: 1;
+}
+.akp-inner input {
+  font-size: .875rem;
+  padding: .45rem .75rem;
+  padding-right: 2.4rem;
+}
+
+/* Always-visible API key hint */
+.api-key-hint {
+  font-size: .75rem;
+  color: var(--text-muted);
+  /* bleed out of card padding */
+  margin-left: -1.75rem;
+  margin-right: -1.75rem;
+  margin-bottom: -1.75rem;
+  padding: .55rem 1.75rem .75rem;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 14px 14px;
+  background: var(--surface);
+}
+.api-key-hint a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.api-key-hint a:hover { text-decoration: underline; }
+
 .input-reveal-wrap {
   position: relative;
   display: flex;
