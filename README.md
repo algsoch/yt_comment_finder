@@ -4,11 +4,13 @@
 <img src="https://img.shields.io/badge/FastAPI-0.135-009688?style=for-the-badge&logo=fastapi" alt="FastAPI"/>
 <img src="https://img.shields.io/badge/Python-3.14-3776AB?style=for-the-badge&logo=python" alt="Python"/>
 <img src="https://img.shields.io/badge/YouTube%20API%20v3-FF0000?style=for-the-badge&logo=youtube" alt="YouTube API"/>
+<a href="https://yt-comment-finder.onrender.com/"><img src="https://img.shields.io/badge/Live%20Demo-online-22c55e?style=for-the-badge&logo=render" alt="Live on Render"/></a>
 
 # 📺 YouTube Comment Finder
 
 **Search YouTube comments by username or keyword — with live scanning progress, browse mode, and beautiful dark UI.**
 
+[**🚀 Live App**](https://yt-comment-finder.onrender.com/) &nbsp;·&nbsp;
 [**▶ Watch Demo**](https://youtu.be/qsttpVf8XNU) &nbsp;·&nbsp;
 [**GitHub**](https://github.com/algsoch/yt_comment_finder) &nbsp;·&nbsp;
 [**LinkedIn**](https://www.linkedin.com/in/algsoch)
@@ -90,6 +92,8 @@ So I built this: a fast, clean tool that streams through all comments on any You
 ---
 
 ## 🚀 Quick Start
+
+> **Just want to try it?** 👉 [**https://yt-comment-finder.onrender.com/**](https://yt-comment-finder.onrender.com/) — no setup needed.
 
 ### 1 · Clone
 
