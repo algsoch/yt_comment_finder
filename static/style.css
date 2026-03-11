@@ -150,15 +150,16 @@ input[type="text"]::placeholder { color: var(--text-dim); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
-  padding: .7rem 1.5rem;
-  border-radius: 8px;
-  font-size: .95rem;
+  gap: .45rem;
+  padding: .65rem 1.4rem;
+  border-radius: 9px;
+  font-size: .9rem;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: background .18s, transform .12s, box-shadow .18s;
+  transition: background .18s, transform .12s, box-shadow .18s, border-color .18s;
   white-space: nowrap;
+  letter-spacing: .01em;
 }
 
 .btn-primary {
@@ -186,7 +187,9 @@ input[type="text"]::placeholder { color: var(--text-dim); }
 .btn-secondary {
   background: var(--surface3);
   color: var(--text-muted);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
+  padding: .6rem 1.1rem;
+  font-size: .85rem;
 }
 
 .btn-secondary:hover { background: var(--border); color: var(--text); }
@@ -206,9 +209,22 @@ input[type="text"]::placeholder { color: var(--text-dim); }
 .form-actions {
   display: flex;
   align-items: center;
-  gap: .75rem;
-  margin-top: 1.25rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
   flex-wrap: wrap;
+}
+.fa-primary {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+.fa-secondary {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  flex-shrink: 0;
 }
 
 /* ── Alert ──────────────────────────────────────────────────────────────────── */
@@ -887,15 +903,19 @@ mark:hover {
 
 /* ── Browse button ──────────────────────────────────────────────────────────── */
 .btn-browse {
-  background: var(--surface3);
-  color: var(--text);
-  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid rgba(255,107,0,.45);
+  box-shadow: inset 0 0 0 0 rgba(255,107,0,0);
+  transition: background .18s, border-color .18s, box-shadow .18s, color .18s, transform .12s;
 }
 
 .btn-browse:hover {
-  background: var(--surface2);
-  border-color: rgba(255,107,0,.5);
+  background: rgba(255,107,0,.1);
+  border-color: var(--accent);
   color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255,107,0,.12);
+  transform: translateY(-1px);
 }
 
 /* ── Animations ─────────────────────────────────────────────────────────────── */
@@ -948,7 +968,9 @@ mark:hover {
 
   /* Buttons — min 44px tap height */
   .btn { padding: .65rem 1.1rem; font-size: .88rem; min-height: 44px; }
-  .form-actions { gap: .5rem; flex-wrap: wrap; }
+  .form-actions { gap: .75rem; margin-top: 1.25rem; }
+  .fa-primary { gap: .5rem; }
+  .fa-secondary { gap: .5rem; }
 
   /* Progress panel */
   #progress-box { padding: .75rem 1rem; }
@@ -1006,7 +1028,8 @@ mark:hover {
   .sc-grid { grid-template-columns: repeat(3, 1fr); }
   .lp-vidtitle { display: none; }
 
-  .form-actions { gap: .4rem; }
+  .form-actions { gap: .5rem; flex-wrap: wrap; }
+  .fa-primary, .fa-secondary { flex-wrap: wrap; gap: .45rem; }
   .btn { padding: .6rem .9rem; font-size: .84rem; }
 
   .comment-item { padding: .75rem .85rem; }
@@ -1022,8 +1045,8 @@ mark:hover {
   header p  { font-size: .8rem; }
   .logo-icon { width: 30px; height: 30px; font-size: .95rem; border-radius: 7px; }
 
-  /* Stack all buttons full-width */
-  .form-actions { flex-direction: column; align-items: stretch; }
+  /* All buttons stretch full-width and stack individually */
+  .fa-primary, .fa-secondary { flex-direction: column; gap: .45rem; }
   .btn { justify-content: center; width: 100%; }
 
   .sc-grid { grid-template-columns: repeat(3, 1fr); }
